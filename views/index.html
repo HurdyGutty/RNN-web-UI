@@ -14,20 +14,26 @@
 
 </head>
 <body>
-    <h1>{{ . }}</h1>
-
-    <div class="relative flex flex-col mt-6 text-gray-700 bg-white shadow-md bg-clip-border rounded-xl w-96">
-        <div class="p-6">
-          <h5 class="block mb-2 font-sans text-xl antialiased font-semibold leading-snug tracking-normal text-blue-gray-900">
-            UI/UX Review Check
-          </h5>
-          <p class="block font-sans text-base antialiased font-light leading-relaxed text-inherit">
-            Because it's about motivating the doers. Because I'm here to follow my
-            dreams and inspire others.
-          </p>
-        </div>
-      </div> 
+    {{ template "lang" .Nom }}
+    {{ template "lang" .Eng }}
 </body>
 
 </html>
+{{ end }}
+
+{{ block "lang" . }}
+    <div class="flex flex-row justify-around gap-1.5 align-center">
+        {{ range . }}
+            {{template "word" .}}
+        {{ end }}
+    </div>
+{{ end }}
+
+
+{{ block "word" .}}
+<div class="p-6 relative flex flex-col justify-center align-center my-3 text-gray-700 bg-lime-300 shadow-md bg-clip-border rounded-xl w-fit">
+    <h2 class="block font-sans text-xl antialiased font-semibold leading-snug tracking-normal text-blue-gray-900 text-center">
+      {{ . }}
+    </h2>
+  </div>
 {{ end }}
