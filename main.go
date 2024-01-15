@@ -29,6 +29,15 @@ func newTemplate() *Template {
 	}
 }
 
+type Dict map[string]interface{}
+
+func newDict() Dict {
+	return Dict{
+		"Nom": []string{},
+		"Eng": []string{},
+	}
+}
+
 func main() {
 	e := echo.New()
 	e.Renderer = newTemplate()
@@ -41,7 +50,12 @@ func main() {
 
 	e.Use(middleware.Logger())
 
-	data := "Hello, World!"
+	data := newDict()
+	nom := []string{"a", "b", "c"}
+	eng := []string{"1", "2", "3"}
+
+	data["Nom"] = nom
+	data["Eng"] = eng
 
 	e.GET("/", func(c echo.Context) error {
 		return c.Render(http.StatusOK, "index", data)
