@@ -15,25 +15,192 @@
 </head>
 <body>
     {{ template "lang" .Nom }}
+    <svg id="lines" height="150" width="100%" xmlns="http://www.w3.org/2000/svg" onload="makeDraggable(evt)">
+    </svg>
     {{ template "lang" .Eng }}
+
+    {{ template "save" }}
+
+    {{ template "js" .Align }}
 </body>
 
 </html>
 {{ end }}
 
 {{ block "lang" . }}
-    <div class="flex flex-row justify-around gap-1.5 align-center">
-        {{ range . }}
-            {{template "word" .}}
+    <div id="{{ .Key }}" class="flex flex-row justify-around gap-1.5 align-center">
+        {{ range $i, $el := .Data }}
+        <div id="{{ $i }}" class="p-6 relative flex flex-col justify-center align-center text-gray-700 bg-lime-300 shadow-md bg-clip-border rounded-xl w-fit">
+            <h2 class="block font-sans text-xl antialiased font-semibold leading-snug tracking-normal text-blue-gray-900 text-center">
+              {{ $el }}
+            </h2>
+        </div>
         {{ end }}
     </div>
 {{ end }}
 
-
-{{ block "word" .}}
-<div class="p-6 relative flex flex-col justify-center align-center my-3 text-gray-700 bg-lime-300 shadow-md bg-clip-border rounded-xl w-fit">
-    <h2 class="block font-sans text-xl antialiased font-semibold leading-snug tracking-normal text-blue-gray-900 text-center">
-      {{ . }}
-    </h2>
-  </div>
+{{ block "save" . }}
+    <div id="save-zone" class="flex flex-col gap-1.5 justify-center align-center mt-4 w-1/3 mx-auto text-2xl"  >
+        <div id="message" class="text-center {{if . }} text-green-500 {{ end }} "
+        {{if not . }} hidden {{ end }}
+        >{{ . }}</div>
+        <button hx-put="/save" hx-on:htmx:config-request="save(event)" hx-swap="outerHTML" hx-target="#save-zone" 
+        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        >
+            Save
+        </button>
+    </form>
 {{ end }}
+
+{{ block "js" .}}
+    <script>
+        var align = {{ . }};
+        var x1_min = 0;
+        var x2_min = 0;
+        var x1_max = 0;
+        var x2_max = 0;
+        var x1_coors = [];
+        var x2_coors = [];
+        window.onload = function() {
+            var nom = document.getElementById("Nom");
+            var eng = document.getElementById("Eng");
+            var nomChildren = nom.children;
+            var engChildren = eng.children;
+            var svg = document.getElementById("lines");
+            var svgHeight = svg.clientHeight;
+            x1_coors = Array.from(nomChildren).map(ele => ele.offsetLeft + ele.clientWidth / 2);
+            x2_coors = Array.from(engChildren).map(ele => ele.offsetLeft + ele.clientWidth / 2);
+            for (let i = 0; i < align.length; i++) {
+                var nomChild = nomChildren[align[i][0]];
+                var engChild = engChildren[align[i][1]];
+                var group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                group.setAttribute("stroke", "black");
+                group.setAttribute("stroke-width", "2");
+                group.setAttribute("fill", "none");
+
+                var c1 = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                var x1 = nomChild.offsetLeft + nomChild.clientWidth / 2;
+                var radius = 12;
+
+                var y1 = radius;
+                c1.setAttribute("cx", x1);
+                c1.setAttribute("cy", y1);
+                c1.setAttribute("r", radius);
+                c1.setAttribute("fill", "black");
+                c1.classList.add("cursor-move");
+                c1.classList.add("draggable");
+                c1.classList.add("nom");
+                group.appendChild(c1);
+
+                var c2 = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                var x2 = engChild.offsetLeft + engChild.clientWidth / 2;
+                var y2 = svgHeight - radius;
+                c2.setAttribute("cx", x2);
+                c2.setAttribute("cy", y2);
+                c2.setAttribute("r", radius);
+                c2.setAttribute("fill", "black");
+                c2.classList.add("cursor-move");
+                c2.classList.add("draggable");
+                c2.classList.add("eng");
+                group.appendChild(c2);
+
+                let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+
+                line.setAttribute("x1", x1);
+                line.setAttribute("y1", y1);
+                line.setAttribute("x2", x2);
+                line.setAttribute("y2", y2);
+                line.classList.add("line");
+                group.appendChild(line);
+                
+                svg.appendChild(group);
+            }
+        }
+    
+
+    function makeDraggable(evt) {
+        var svg = evt.target;
+        svg.addEventListener('mousedown', startDrag);
+        svg.addEventListener('mousemove', drag);
+        svg.addEventListener('mouseup', endDrag);
+        svg.addEventListener('mouseleave', endDrag);
+        
+
+        var selectedElement = false;
+
+        function startDrag(evt) {
+            if (evt.target.classList.contains('draggable')) {
+                selectedElement = evt.target;
+            }
+        }
+        function drag(evt) {
+            if (selectedElement) {
+                evt.preventDefault();
+                var dragX = evt.clientX;
+                var parent = selectedElement.parentElement;
+                var line = parent.getElementsByClassName("line")[0];
+                var classTarget = selectedElement.classList.contains("nom") ? "nom" : "eng";
+                var x_coors = classTarget === "nom" ? x1_coors : x2_coors;
+                var x_string = classTarget === "nom" ? "x1" : "x2";
+                dragX = findRangeX(dragX, x_coors);
+                line.setAttributeNS(null, x_string, dragX);
+
+                selectedElement.setAttributeNS(null, "cx", dragX);
+            }
+        }
+        function endDrag(evt) {
+            selectedElement = null;
+        }
+    }
+    
+    function findRangeX(x, x_coors) {
+        if (x < x_coors[0]) {
+            console.log(x_coors[0]);
+            return x_coors[0];
+        } else if (x > x_coors[x_coors.length - 1]) {
+            return x_coors[x_coors.length - 1];
+        } else {
+            var cell = x_coors.findIndex(ele => ele >= x);
+            var left = x_coors[cell - 1];
+            var right = x_coors[cell];
+            var step = (x_coors[1] - x_coors[0]) / 2;
+            var multiplier = Math.floor((x - left) / step + 0.5);
+            return  left + multiplier * step;
+        }
+    }
+    function findIndexX(x1, x2) {
+        var x1_index = x1_coors.findIndex(ele => ele == x1);
+        console.log(x1, x1_coors, x1_index);
+        var x2_index = x2_coors.findIndex(ele => ele == x2);
+        console.log(x2, x2_coors, x2_index);
+        if (x1_index === -1) return -1;
+        if (x2_index === -1) return -1;
+        return [x1_index, x2_index];
+    }
+
+    function save(evt) {
+        var lines = document.getElementsByClassName("line");
+        var reAlign = [];
+        var message = document.getElementById("message");
+        for (let i = 0; i < lines.length; i++) {
+            var line = lines[i];
+            var x1 = line.getAttribute("x1");
+            var x2 = line.getAttribute("x2");
+            var index = findIndexX(x1, x2);
+            if (index === -1) {
+                alert("Please align all words");
+                evt.preventDefault();
+                message.innerText = "Please align all words";
+                message.hidden = false;
+                message.classList.add("text-red-500");
+                message.classList.remove("text-green-500");
+                message.classList.add("font-bold");
+            }
+            reAlign.push(index);
+        }
+        console.log(reAlign);
+        event.detail.parameters['align'] = JSON.stringify(reAlign);
+    }
+    </script>
+{{ end }}
+
