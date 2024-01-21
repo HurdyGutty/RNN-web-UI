@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"io"
 	"net/http"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -82,7 +83,7 @@ func mockPages() Pages {
 		newPage(2, 3, newDict().mockData(
 			[]string{"Battre", "le", "fer", "pendant", "qu'il", "est", "chaud"},
 			[]string{"Strike", "the", "iron", "while", "it", "is", "hot"},
-			[][]int{{0, 0}, {1, 1}, {2, 2}, {3, 3}, {4, 4}, {5, 5}})),
+			[][]int{{0, 0}, {1, 1}, {2, 2}, {3, 3}, {4, 4}, {5, 5}, {6, 6}})),
 		newPage(3, 3, newDict().mockData(
 			[]string{"En", "faire", "tout", "un", "fromage"},
 			[]string{"To", "make", "a", "whole", "cheese"},
@@ -100,12 +101,12 @@ func main() {
 		Root:       "static",
 		Filesystem: http.FS(static),
 	}))
-	e.Use(middleware.Logger())
+	// e.Use(middleware.Logger())
 
-	// e.Use(middleware.BodyDump(func(c echo.Context, reqBody, resBody []byte) {
-	// 	fmt.Printf("%s\n", reqBody)
-	// 	fmt.Printf("%s\n", resBody)
-	// }))
+	e.Use(middleware.BodyDump(func(c echo.Context, reqBody, resBody []byte) {
+		fmt.Printf("%s\n", reqBody)
+		fmt.Printf("%s\n", resBody)
+	}))
 
 	pages := mockPages()
 	page := pages[0]
@@ -113,6 +114,20 @@ func main() {
 	data := page.Values
 
 	e.GET("/", func(c echo.Context) error {
+		return c.Render(http.StatusOK, "index", page)
+	})
+	e.GET("/page/:pageNum", func(c echo.Context) error {
+		pageNum, err := strconv.Atoi(c.Param("pageNum"))
+		fmt.Print(pageNum)
+		if err != nil {
+			return c.Render(http.StatusInternalServerError, "500", nil)
+		}
+		if pageNum < 1 || pageNum > len(pages) {
+			return c.Render(http.StatusNotFound, "404", nil)
+		}
+		page = pages[pageNum-1]
+		data = page.Values
+
 		return c.Render(http.StatusOK, "index", page)
 	})
 	e.PUT("/save", func(c echo.Context) error {
