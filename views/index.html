@@ -45,7 +45,7 @@
 {{ block "graph" .}}
     <section id="graph">
     {{ template "lang" .Nom }}
-    <svg id="lines" height="150" width="100%" xmlns="http://www.w3.org/2000/svg" onload="makeDraggable(evt)">
+    <svg id="lines" height="150" width="100%" xmlns="http://www.w3.org/2000/svg" onmouseover="makeDraggable(evt)">
     </svg>
     {{ template "lang" .Eng }}
     </section>
@@ -73,7 +73,7 @@
         >
             Save
         </button>
-    </form>
+    </div>
 {{ end }}
 
 {{ block "js" .}}
@@ -140,16 +140,20 @@
                 svg.appendChild(group);
             }
         }
-        window.onload = drawGraph;
-        htmx.on("htmx:afterSettle", drawGraph);
-
+        document.body.onload = drawGraph;
+        htmx.on("htmx:afterSettle", function(){
+            var lines = document.getElementById("lines").childNodes;
+            if (lines.length <= 1) {
+                drawGraph();
+            }
+        });
+        
     function makeDraggable(evt) {
         var svg = evt.target;
         svg.addEventListener('mousedown', startDrag);
         svg.addEventListener('mousemove', drag);
         svg.addEventListener('mouseup', endDrag);
         svg.addEventListener('mouseleave', endDrag);
-        
 
         var selectedElement = false;
 
@@ -180,23 +184,32 @@
     
     function findRangeX(x, x_coors) {
         if (x <= x_coors[0]) {
+            console.log(x_coors[0]);
             return x_coors[0];
         } else if (x >= x_coors[x_coors.length - 1]) {
+            console.log(x_coors[x_coors.length - 1]);
             return x_coors[x_coors.length - 1];
         } else {
             var cell = x_coors.findIndex(ele => ele >= x);
             var left = x_coors[cell - 1];
             var right = x_coors[cell];
-            var step = (x_coors[1] - x_coors[0]) / 2;
-            var multiplier = Math.floor((x - left) / step + 0.5);
-            return  left + multiplier * step;
+            var mid = (right + left) / 2;
+            var mid_step = (right - left) / 4;
+            if (x <= left + mid_step) {
+                console.log(left);
+                return left;
+            } else if ( mid_step + left < x && x <= mid + mid_step) {
+                console.log(mid);
+                return mid;
+            } else {
+                console.log(right);
+                return right;
+            }
         }
     }
     function findIndexX(x1, x2) {
         var x1_index = x1_coors.findIndex(ele => ele == x1);
-        console.log(x1, x1_coors, x1_index);
         var x2_index = x2_coors.findIndex(ele => ele == x2);
-        console.log(x2, x2_coors, x2_index);
         if (x1_index === -1) return -1;
         if (x2_index === -1) return -1;
         return [x1_index, x2_index];
@@ -222,7 +235,6 @@
             }
             reAlign.push(index);
         }
-        console.log(reAlign);
         event.detail.parameters['align'] = JSON.stringify(reAlign);
     }
     </script>
