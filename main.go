@@ -27,18 +27,68 @@ func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Con
 
 func newTemplate() *Template {
 	return &Template{
-		templates: template.Must(template.ParseGlob("views/*.html")),
+		templates: template.Must(template.New("index").Funcs(template.FuncMap{
+			"add":   func(a, b int) int { return a + b },
+			"minus": func(a, b int) int { return a - b },
+		}).ParseGlob("views/*.html")),
 	}
 }
 
 type Dict map[string]interface{}
+type AlignmentValues Dict
 
-func newDict() Dict {
-	return Dict{
+func newDict() AlignmentValues {
+	return AlignmentValues{
 		"Nom":   Dict{"Key": "Nom", "Data": []string{}},
 		"Eng":   Dict{"Key": "Eng", "Data": []string{}},
 		"Align": [][]int{},
 	}
+}
+
+func (values AlignmentValues) mockData(nom, eng []string, align [][]int) AlignmentValues {
+	values["Nom"] = Dict{"Key": "Nom", "Data": nom}
+	values["Eng"] = Dict{"Key": "Eng", "Data": eng}
+	values["Align"] = align
+	return values
+}
+
+type Page struct {
+	Page      int
+	TotalPage int
+	Values    AlignmentValues
+}
+
+func newPage(page, totalPage int, values AlignmentValues) Page {
+	return Page{
+		Page:      page,
+		TotalPage: totalPage,
+		Values:    values,
+	}
+}
+
+type Pages []Page
+
+func newPages() Pages {
+	newPages := []Page{}
+	return newPages
+}
+
+func mockPages() Pages {
+	newPages := []Page{
+		newPage(1, 3, newDict().mockData(
+			[]string{"Je", "parle", "francais"},
+			[]string{"I", "speak", "French"},
+			[][]int{{0, 0}, {1, 1}, {2, 2}})),
+		newPage(2, 3, newDict().mockData(
+			[]string{"Battre", "le", "fer", "pendant", "qu'il", "est", "chaud"},
+			[]string{"Strike", "the", "iron", "while", "it", "is", "hot"},
+			[][]int{{0, 0}, {1, 1}, {2, 2}, {3, 3}, {4, 4}, {5, 5}})),
+		newPage(3, 3, newDict().mockData(
+			[]string{"En", "faire", "tout", "un", "fromage"},
+			[]string{"To", "make", "a", "whole", "cheese"},
+			[][]int{{0, 0}, {1, 1}, {2, 3}, {3, 2}, {4, 4}})),
+	}
+	return newPages
 }
 
 func main() {
@@ -50,24 +100,20 @@ func main() {
 		Root:       "static",
 		Filesystem: http.FS(static),
 	}))
+	e.Use(middleware.Logger())
 
-	e.Use(middleware.BodyDump(func(c echo.Context, reqBody, resBody []byte) {
-		fmt.Printf("%s\n", reqBody)
-		fmt.Printf("%s\n", resBody)
-	}))
+	// e.Use(middleware.BodyDump(func(c echo.Context, reqBody, resBody []byte) {
+	// 	fmt.Printf("%s\n", reqBody)
+	// 	fmt.Printf("%s\n", resBody)
+	// }))
 
-	data := newDict()
-	nom := []string{"a", "b", "c", "d"}
-	eng := []string{"1", "2", "3"}
+	pages := mockPages()
+	page := pages[0]
 
-	align := [][]int{{0, 1}, {1, 2}, {2, 0}, {3, 0}}
-
-	data["Nom"] = Dict{"Key": "Nom", "Data": nom}
-	data["Eng"] = Dict{"Key": "Eng", "Data": eng}
-	data["Align"] = align
+	data := page.Values
 
 	e.GET("/", func(c echo.Context) error {
-		return c.Render(http.StatusOK, "index", data)
+		return c.Render(http.StatusOK, "index", page)
 	})
 	e.PUT("/save", func(c echo.Context) error {
 		data_return := c.FormValue("align")
