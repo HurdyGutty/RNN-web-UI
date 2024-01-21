@@ -111,14 +111,11 @@ func main() {
 	pages := mockPages()
 	page := pages[0]
 
-	data := page.Values
-
 	e.GET("/", func(c echo.Context) error {
 		return c.Render(http.StatusOK, "index", page)
 	})
 	e.GET("/page/:pageNum", func(c echo.Context) error {
 		pageNum, err := strconv.Atoi(c.Param("pageNum"))
-		fmt.Print(pageNum)
 		if err != nil {
 			return c.Render(http.StatusInternalServerError, "500", nil)
 		}
@@ -126,25 +123,20 @@ func main() {
 			return c.Render(http.StatusNotFound, "404", nil)
 		}
 		page = pages[pageNum-1]
-		data = page.Values
-
 		return c.Render(http.StatusOK, "index", page)
 	})
 	e.PUT("/save", func(c echo.Context) error {
 		data_return := c.FormValue("align")
-		fmt.Printf("%s\n", data_return)
 		align := [][]int{}
 		err := json.Unmarshal([]byte(data_return), &align)
 		message := "Saved"
 
 		if err != nil {
-			fmt.Printf("%s\n", err)
 			message = "Error"
 			return c.Render(500, "save", message)
 		}
 
-		data["Align"] = align
-		fmt.Printf("%v\n", data)
+		page.Values["Align"] = align
 
 		return c.Render(http.StatusOK, "save", message)
 	})
