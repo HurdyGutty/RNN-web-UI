@@ -1,4 +1,4 @@
-module github.com/HurdyGutty/rnn-demonstration
+module github.com/HurdyGutty/RNN-web-UI
 
 go 1.21.4
 
