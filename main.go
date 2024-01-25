@@ -3,7 +3,6 @@ package main
 import (
 	"embed"
 	"encoding/json"
-	"fmt"
 	"html/template"
 	"io"
 	"net/http"
@@ -103,12 +102,12 @@ func main() {
 		Root:       "static",
 		Filesystem: http.FS(static),
 	}))
-	// e.Use(middleware.Logger())
+	e.Use(middleware.Logger())
 
-	e.Use(middleware.BodyDump(func(c echo.Context, reqBody, resBody []byte) {
-		fmt.Printf("%s\n", reqBody)
-		fmt.Printf("%s\n", resBody)
-	}))
+	// e.Use(middleware.BodyDump(func(c echo.Context, reqBody, resBody []byte) {
+	// 	fmt.Printf("%s\n", reqBody)
+	// 	fmt.Printf("%s\n", resBody)
+	// }))
 
 	pages := read.ParseData()
 	page := pages[0]
