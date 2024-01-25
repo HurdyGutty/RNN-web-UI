@@ -17,7 +17,14 @@ func readData(path string) []byte {
 func parseLanguage(data []byte) [][]string {
 	var lines [][]string
 	var line []string
-	var word string
+	var word []byte
+
+	appendWord := func(word []byte) []byte {
+		if string(word) != "" {
+			line = append(line, string(word))
+		}
+		return []byte{}
+	}
 
 	for _, b := range data {
 
@@ -28,27 +35,21 @@ func parseLanguage(data []byte) [][]string {
 			continue
 		}
 		if b == '\n' {
-			if word != "" {
-				line = append(line, word)
-			}
-			word = ""
+			word = appendWord(word)
 			lines = append(lines, line)
 			line = []string{}
 			continue
 		}
 
 		if b == ' ' {
-			if word != "" {
-				line = append(line, word)
-			}
-			word = ""
+			word = appendWord(word)
 			continue
 		}
 
-		word += string(b)
+		word = append(word, b)
 
 	}
-	line = append(line, word)
+	appendWord(word)
 	lines = append(lines, line)
 	return lines
 }
@@ -153,9 +154,9 @@ func parseAlign(data []byte) [][][]int {
 
 		if (b >= '0' && b <= '9') && level == 3 {
 			if isRight {
-				right = append(right, int(b-'0'))
+				right = append(right, int(b-'0')-1)
 			} else {
-				left = append(left, int(b-'0'))
+				left = append(left, int(b-'0')-1)
 			}
 		}
 	}
