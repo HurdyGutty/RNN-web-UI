@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/HurdyGutty/RNN-web-UI/pkg/read"
+
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -108,7 +110,7 @@ func main() {
 		fmt.Printf("%s\n", resBody)
 	}))
 
-	pages := mockPages()
+	pages := read.ParseData()
 	page := pages[0]
 
 	e.GET("/", func(c echo.Context) error {
