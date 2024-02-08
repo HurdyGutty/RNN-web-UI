@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/HurdyGutty/RNN-web-UI/pkg/read"
+	save "github.com/HurdyGutty/RNN-web-UI/pkg/saveAlign"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -133,11 +134,18 @@ func main() {
 		message := "Saved"
 
 		if err != nil {
-			message = "Error"
+			message = "Data error"
 			return c.Render(500, "save", message)
 		}
 
 		page.Values["Align"] = align
+
+		err = save.SaveAlign("internal/DB/aligned_vie-eng.txt", page.Page, align)
+
+		if err != nil {
+			message = "Read File Error"
+			return c.Render(500, "save", message)
+		}
 
 		return c.Render(http.StatusOK, "save", message)
 	})
