@@ -1,8 +1,8 @@
-package main
+package save
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"os"
 	"sort"
 )
@@ -31,30 +31,28 @@ func offsetLines(data []byte, line int) (int, int) {
 				next_line = i + 1
 				break
 			}
-			fmt.Println(line, offset, next_line)
 		}
 	}
-	if line != 0 {
+	if line > 0 {
 		panic("line not found")
 	}
 	return offset, next_line
 }
 
-func saveAtLine(path string, line int, data []byte) {
+func saveAtLine(path string, line int, data []byte) error {
 	content, err := os.ReadFile(path)
 
 	if err != nil {
-		panic(err)
+		return errors.New("file not found")
 	}
 
 	offset, next_line := offsetLines(content, line)
 
 	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 	if err != nil {
-		panic(err)
+		return errors.New("file not found")
 	}
 	defer f.Close()
-	fmt.Println(offset, next_line)
 
 	end_line := offset + len(data)
 	f.WriteAt(content[:offset], 0)
@@ -64,7 +62,7 @@ func saveAtLine(path string, line int, data []byte) {
 	} else {
 		f.Truncate(int64(end_line - 1))
 	}
-
+	return nil
 }
 
 type AlignMap map[int][]int
@@ -148,18 +146,26 @@ func alignCompression(data [][]int) [][][]int {
 	return aligns
 }
 
-func main() {
-
-	data :=
-		[][]int{
-			{1, 2}, {2, 1}, {3, 4}, {4, 3}, {5, 5}, {6, 5}, {7, 8}, {7, 7},
-		}
-
+func saveAlign(path string, line int, data [][]int) error {
 	data_compressed := alignCompression(data)
 
-	line := append(AlignsToBytes(data_compressed), '\n')
+	line_data := append(AlignsToBytes(data_compressed), '\n')
 
-	saveAtLine("internal/DB/test.txt", 3, line)
-
-	fmt.Println("done")
+	return saveAtLine(path, line, line_data)
 }
+
+// func main() {
+
+// 	data :=
+// 		[][]int{
+// 			{1, 2}, {2, 1}, {3, 4}, {4, 3}, {5, 5}, {6, 5}, {7, 8}, {7, 7},
+// 		}
+
+// 	data_compressed := alignCompression(data)
+
+// 	line := append(AlignsToBytes(data_compressed), '\n')
+
+// 	saveAtLine("internal/DB/test.txt", 0, line)
+
+// 	fmt.Println("done")
+// }
