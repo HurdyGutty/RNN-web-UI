@@ -1,4 +1,4 @@
-package save
+package saveAlign
 
 import (
 	"encoding/json"
@@ -146,7 +146,7 @@ func alignCompression(data [][]int) [][][]int {
 	return aligns
 }
 
-func saveAlign(path string, line int, data [][]int) error {
+func SaveAlign(path string, line int, data [][]int) error {
 	data_compressed := alignCompression(data)
 
 	line_data := append(AlignsToBytes(data_compressed), '\n')
