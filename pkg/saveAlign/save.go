@@ -86,8 +86,8 @@ func alignCompression(data [][]int) [][][]int {
 	right_align := make(AlignMap)
 
 	for _, pair := range data {
-		left := pair[0]
-		right := pair[1]
+		left := pair[0] + 1
+		right := pair[1] + 1
 		left_val, left_checked := left_align[left]
 		right_val, right_checked := right_align[right]
 
