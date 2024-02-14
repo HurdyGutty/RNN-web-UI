@@ -14,6 +14,9 @@
 
 </head>
 <body>
+
+    {{ template "editor" }}
+
     {{ template "graph" .Values}}
 
     <div id="pagination" class="w-1/2 flex justify-center gap-1 align-center text-2xl mx-auto mt-4">
@@ -39,6 +42,18 @@
 </body>
 
 </html>
+{{ end }}
+
+{{ define "editor" }}
+    <section id="editor" class="flex gap-3 justify-center align-center mt-4 w-1/2 mx-auto">
+        <div class="w-12 shadow-md" onclick="toolSelection(event)">
+            <img id="draw"  src="image/pencil-svgrepo-com.svg" alt="Draw the graph" />
+        </div>
+        <div class="w-12 shadow-md" onclick="toolSelection(event)">
+            <img id="erase" src="image/eraser.svg" alt="Erase the graph" class="w-full" />
+        </div>
+    </div> 
+    </section>
 {{ end }}
 
 {{ block "graph" .}}
@@ -206,6 +221,49 @@
             }
         }
     }
+
+    function toolSelection(evt) {
+        target = evt.target;
+        actived = target.classList.contains("actived");
+        draw = document.getElementById("draw");
+        erase = document.getElementById("erase");
+        console.log(draw, erase, target, actived);
+        
+        function activateTarget(target) {
+            target.classList.add("actived");
+            target.classList.remove("shadow-md");
+            target.classList.add("shadow-inner");
+            target.classList.add("bg-green-500");
+        }
+
+        function deactivateTarget(target) {
+            target.classList.remove("actived");
+            target.classList.add("shadow-md");
+            target.classList.remove("shadow-inner");
+            target.classList.remove("bg-green-500");
+        }
+
+        if (target == draw) {
+            otherActived = erase.classList.contains("actived");
+            if (otherActived) {
+                deactivateTarget(erase);
+            }
+        } else {
+            otherActived = draw.classList.contains("actived");
+            if (otherActived) {
+                deactivateTarget(draw);
+            }
+        }
+        
+        if (actived) {
+            activateTarget(target);
+        } else {
+            deactivateTarget(target);
+        }
+       
+    }
+
+
     function findIndexX(x1, x2) {
         var x1_index = x1_coors.findIndex(ele => ele == x1);
         var x2_index = x2_coors.findIndex(ele => ele == x2);
