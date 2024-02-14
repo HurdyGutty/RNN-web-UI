@@ -140,7 +140,7 @@ func main() {
 
 		page.Values["Align"] = align
 
-		err = save.SaveAlign("internal/DB/aligned_vie-eng.txt", page.Page, align)
+		err = save.SaveAlign("internal/DB/aligned_vie-eng.txt", page.Page-1, align)
 
 		if err != nil {
 			message = "Read File Error"
