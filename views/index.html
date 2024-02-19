@@ -46,11 +46,11 @@
 
 {{ define "editor" }}
     <section id="editor" class="flex gap-3 justify-center align-center mt-4 w-1/2 mx-auto">
-        <div class="w-12 shadow-md" onclick="toolSelection(event)">
-            <img id="draw"  src="image/pencil-svgrepo-com.svg" alt="Draw the graph" />
+        <div class="w-12" onclick="toolSelection(event)">
+            <img id="draw" class="shadow-md rounded-md bg-lime-300 p-2"  src="image/pencil-svgrepo-com.svg" alt="Draw the graph" />
         </div>
-        <div class="w-12 shadow-md" onclick="toolSelection(event)">
-            <img id="erase" src="image/eraser.svg" alt="Erase the graph" class="w-full" />
+        <div class="w-12" onclick="toolSelection(event)">
+            <img id="erase" src="image/eraser.svg" alt="Erase the graph" class="w-full shadow-md rounded-md bg-lime-300 p-2" />
         </div>
     </div> 
     </section>
@@ -234,6 +234,7 @@
             target.classList.remove("shadow-md");
             target.classList.add("shadow-inner");
             target.classList.add("bg-green-500");
+            target.classList.remove("bg-lime-300");
         }
 
         function deactivateTarget(target) {
@@ -241,9 +242,16 @@
             target.classList.add("shadow-md");
             target.classList.remove("shadow-inner");
             target.classList.remove("bg-green-500");
+            target.classList.add("bg-lime-300");
         }
-
-        if (target == draw) {
+        
+        if (!actived) {
+            activateTarget(target);
+        } else {
+            deactivateTarget(target);
+        }
+       
+        if (target.isEqualNode(draw)) {
             otherActived = erase.classList.contains("actived");
             if (otherActived) {
                 deactivateTarget(erase);
@@ -254,13 +262,6 @@
                 deactivateTarget(draw);
             }
         }
-        
-        if (actived) {
-            activateTarget(target);
-        } else {
-            deactivateTarget(target);
-        }
-       
     }
 
 
