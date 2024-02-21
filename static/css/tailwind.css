@@ -594,8 +594,12 @@ video {
   width: 100%;
 }
 
-.cursor-move {
-  cursor: move;
+.cursor-crosshair {
+  cursor: crosshair;
+}
+
+.cursor-pointer {
+  cursor: pointer;
 }
 
 .flex-row {

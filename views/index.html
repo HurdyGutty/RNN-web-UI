@@ -59,7 +59,7 @@
 {{ block "graph" .}}
     <section id="graph" class="mt-2">
     {{ template "lang" .Nom }}
-    <svg id="lines" height="150" width="100%" xmlns="http://www.w3.org/2000/svg" onmouseover="makeDraggable(evt)">
+    <svg id="lines" height="150" width="100%" xmlns="http://www.w3.org/2000/svg" onmouseover="makeDrawable(evt)">
     </svg>
     {{ template "lang" .Eng }}
     </section>
@@ -99,6 +99,8 @@
         var x2_max = 0;
         var x1_coors = [];
         var x2_coors = [];
+        var y1 = 0;
+        var y2 = 0;
         function drawGraph() {
             var nom = document.getElementById("Nom");
             var eng = document.getElementById("Eng");
@@ -108,50 +110,56 @@
             var svgHeight = svg.clientHeight;
             x1_coors = Array.from(nomChildren).map(ele => ele.offsetLeft + ele.clientWidth / 2);
             x2_coors = Array.from(engChildren).map(ele => ele.offsetLeft + ele.clientWidth / 2);
-            for (let i = 0; i < align.length; i++) {
-                var nomChild = nomChildren[align[i][0]];
-                var engChild = engChildren[align[i][1]];
-                var group = document.createElementNS("http://www.w3.org/2000/svg", "g");
-                group.setAttribute("stroke", "black");
-                group.setAttribute("stroke-width", "2");
-                group.setAttribute("fill", "none");
+            var radius = 12;
+            y1 = radius;
+            y2 = svgHeight - radius;
 
+            for (let i = 0; i < x1_coors.length; i++) {
+                let x1 = x1_coors[i]
                 var c1 = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                var x1 = nomChild.offsetLeft + nomChild.clientWidth / 2;
-                var radius = 12;
-
-                var y1 = radius;
                 c1.setAttribute("cx", x1);
                 c1.setAttribute("cy", y1);
                 c1.setAttribute("r", radius);
                 c1.setAttribute("fill", "black");
-                c1.classList.add("cursor-move");
-                c1.classList.add("draggable");
+                c1.classList.add("cursor-crosshair");
+                c1.classList.add("drawable");
                 c1.classList.add("nom");
-                group.appendChild(c1);
+                svg.appendChild(c1);
+            }
 
+            for (let i = 0; i < x2_coors.length; i++) {
                 var c2 = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                var x2 = engChild.offsetLeft + engChild.clientWidth / 2;
-                var y2 = svgHeight - radius;
+                let x2 = x2_coors[i];
                 c2.setAttribute("cx", x2);
                 c2.setAttribute("cy", y2);
                 c2.setAttribute("r", radius);
                 c2.setAttribute("fill", "black");
-                c2.classList.add("cursor-move");
-                c2.classList.add("draggable");
+                c2.classList.add("cursor-crosshair");
+                c2.classList.add("drawable");
                 c2.classList.add("eng");
-                group.appendChild(c2);
+                svg.appendChild(c2);
+            }
+
+            for (let i = 0; i < align.length; i++) {
+                var nomChild = nomChildren[align[i][0]];
+                var engChild = engChildren[align[i][1]];
+
+                let x1 = nomChild.offsetLeft + nomChild.clientWidth / 2;
+
+                let x2 = engChild.offsetLeft + engChild.clientWidth / 2;
 
                 let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-
+                line.setAttribute("stroke", "black");
+                line.setAttribute("stroke-width", "2");
                 line.setAttribute("x1", x1);
                 line.setAttribute("y1", y1);
                 line.setAttribute("x2", x2);
                 line.setAttribute("y2", y2);
-                line.classList.add("line");
-                group.appendChild(line);
                 
-                svg.appendChild(group);
+                line.classList.add("line");
+                line.classList.add("cursor-pointer");
+                svg.appendChild(line);
+                
             }
         }
         document.body.onload = drawGraph;
@@ -161,47 +169,93 @@
                 drawGraph();
             }
         });
+
+    var line = null;
         
-    function makeDraggable(evt) {
-        var svg = evt.target;
-        svg.addEventListener('mousedown', startDrag);
-        svg.addEventListener('mousemove', drag);
-        svg.addEventListener('mouseup', endDrag);
-        svg.addEventListener('mouseleave', endDrag);
+    function makeDrawable(evt) {
+        var svg = document.getElementById("lines");
+        let draw = document.getElementById("draw");
+        let erase = document.getElementById("erase");
+        let isDrawing = draw.classList.contains("actived")
+        let isErasing = erase.classList.contains("actived")
+
+        svg.addEventListener('mousedown', startDraw, {once: true});
+        svg.addEventListener('mousemove', drawLine);
+        svg.addEventListener('mouseup', endDraw);
+        svg.addEventListener('mouseleave', endDraw);
+        svg.addEventListener('click', isErasing ? eraseLine : null)
 
         var selectedElement = false;
+        
 
-        function startDrag(evt) {
-            if (evt.target.classList.contains('draggable')) {
+        function startDraw(evt) {
+            
+            if (isDrawing && evt.target.classList.contains('drawable') && line === null) {
                 selectedElement = evt.target;
+                line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                let x1 = Number(selectedElement.getAttribute("cx"));
+                let x2 = x1;
+                let y_circle = Number(selectedElement.getAttribute("cy"));
+                
+                line.setAttribute("stroke", "black");
+                line.setAttribute("stroke-width", "2");
+                line.classList.add("line");
+                line.classList.add("cursor-pointer");
+                line.setAttribute("x1", x1);
+                line.setAttribute("y1", y_circle);
+                line.setAttribute("x2", x2);
+                line.setAttribute("y2", y_circle);
+                console.log(line);
             }
         }
-        function drag(evt) {
-            if (selectedElement) {
+        function drawLine(evt) {
+            if (isDrawing && selectedElement && line) {
                 evt.preventDefault();
-                var dragX = evt.clientX;
-                var parent = selectedElement.parentElement;
-                var line = parent.getElementsByClassName("line")[0];
-                var classTarget = selectedElement.classList.contains("nom") ? "nom" : "eng";
-                var x_coors = classTarget === "nom" ? x1_coors : x2_coors;
-                var x_string = classTarget === "nom" ? "x1" : "x2";
-                dragX = findRangeX(dragX, x_coors);
-                line.setAttributeNS(null, x_string, dragX);
+                var drawX = evt.clientX ;
+                let y = evt.clientY - svg.getBoundingClientRect().top;
+                if (y <= y1 + 10) {
+                    y = y1;
+                } else if ( y >= y2 - 10) {
+                    y = y2;
+                } else {
+                    y = y;
+                }
+                console.log(y, evt.clientY);
 
-                selectedElement.setAttributeNS(null, "cx", dragX);
+                let isNom = selectedElement.classList.contains("nom");
+                var x_coors = isNom ? x2_coors : x1_coors;
+                var x_string = isNom ? "x2" : "x1";
+                var y_string = isNom ? "y2" : "y1";
+                drawX = findRangeX(drawX, x_coors);
+                line.setAttributeNS(null, x_string, drawX);
+                line.setAttributeNS(null, y_string, y);
+                console.log(line);
+                if (line.getAttribute("x1") === line.getAttribute("x2")) {
+                    line.remove();
+                    line = null;
+                } else {
+                    svg.appendChild(line);
+                }
             }
         }
-        function endDrag(evt) {
+        function endDraw(evt) {
             selectedElement = null;
+            line = null;
+        }
+
+        function eraseLine(evt) {
+            if (evt.target.classList.contains('line')) {
+                selectedElement = evt.target;
+                selectedElement.remove();
+                selectedElement = null;
+            }
         }
     }
     
     function findRangeX(x, x_coors) {
         if (x <= x_coors[0]) {
-            console.log(x_coors[0]);
             return x_coors[0];
         } else if (x >= x_coors[x_coors.length - 1]) {
-            console.log(x_coors[x_coors.length - 1]);
             return x_coors[x_coors.length - 1];
         } else {
             var cell = x_coors.findIndex(ele => ele >= x);
@@ -210,13 +264,10 @@
             var mid = (right + left) / 2;
             var mid_step = (right - left) / 4;
             if (x <= left + mid_step) {
-                console.log(left);
                 return left;
             } else if ( mid_step + left < x && x <= mid + mid_step) {
-                console.log(mid);
                 return mid;
             } else {
-                console.log(right);
                 return right;
             }
         }
@@ -227,7 +278,6 @@
         actived = target.classList.contains("actived");
         draw = document.getElementById("draw");
         erase = document.getElementById("erase");
-        console.log(draw, erase, target, actived);
         
         function activateTarget(target) {
             target.classList.add("actived");
