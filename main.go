@@ -37,63 +37,6 @@ func newTemplate() *Template {
 	}
 }
 
-type Dict map[string]interface{}
-type AlignmentValues Dict
-
-func newDict() AlignmentValues {
-	return AlignmentValues{
-		"Nom":   Dict{"Key": "Nom", "Data": []string{}},
-		"Eng":   Dict{"Key": "Eng", "Data": []string{}},
-		"Align": [][]int{},
-	}
-}
-
-func (values AlignmentValues) mockData(nom, eng []string, align [][]int) AlignmentValues {
-	values["Nom"] = Dict{"Key": "Nom", "Data": nom}
-	values["Eng"] = Dict{"Key": "Eng", "Data": eng}
-	values["Align"] = align
-	return values
-}
-
-type Page struct {
-	Page      int
-	TotalPage int
-	Values    AlignmentValues
-}
-
-func newPage(page, totalPage int, values AlignmentValues) Page {
-	return Page{
-		Page:      page,
-		TotalPage: totalPage,
-		Values:    values,
-	}
-}
-
-type Pages []Page
-
-func newPages() Pages {
-	newPages := []Page{}
-	return newPages
-}
-
-func mockPages() Pages {
-	newPages := []Page{
-		newPage(1, 3, newDict().mockData(
-			[]string{"Je", "parle", "francais"},
-			[]string{"I", "speak", "French"},
-			[][]int{{0, 0}, {1, 1}, {2, 2}})),
-		newPage(2, 3, newDict().mockData(
-			[]string{"Battre", "le", "fer", "pendant", "qu'il", "est", "chaud"},
-			[]string{"Strike", "the", "iron", "while", "it", "is", "hot"},
-			[][]int{{0, 0}, {1, 1}, {2, 2}, {3, 3}, {4, 4}, {5, 5}, {6, 6}})),
-		newPage(3, 3, newDict().mockData(
-			[]string{"En", "faire", "tout", "un", "fromage"},
-			[]string{"To", "make", "a", "whole", "cheese"},
-			[][]int{{0, 0}, {1, 1}, {2, 3}, {3, 2}, {4, 4}})),
-	}
-	return newPages
-}
-
 func main() {
 	e := echo.New()
 	e.Renderer = newTemplate()

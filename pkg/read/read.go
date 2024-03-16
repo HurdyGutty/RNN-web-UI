@@ -93,6 +93,24 @@ func newPages() Pages {
 	return newPages
 }
 
+func MockPages() Pages {
+	newPages := []Page{
+		newPage(1, 3, newDict().mockData(
+			[]string{"Je", "parle", "francais"},
+			[]string{"I", "speak", "French"},
+			[][]int{{0, 0}, {1, 1}, {2, 2}})),
+		newPage(2, 3, newDict().mockData(
+			[]string{"Battre", "le", "fer", "pendant", "qu'il", "est", "chaud"},
+			[]string{"Strike", "the", "iron", "while", "it", "is", "hot"},
+			[][]int{{0, 0}, {1, 1}, {2, 2}, {3, 3}, {4, 4}, {5, 5}, {6, 6}})),
+		newPage(3, 3, newDict().mockData(
+			[]string{"En", "faire", "tout", "un", "fromage"},
+			[]string{"To", "make", "a", "whole", "cheese"},
+			[][]int{{0, 0}, {1, 1}, {2, 3}, {3, 2}, {4, 4}})),
+	}
+	return newPages
+}
+
 func parseAlign(data []byte) [][][]int {
 	var alignments [][][]int
 	var alignment_line [][]int
